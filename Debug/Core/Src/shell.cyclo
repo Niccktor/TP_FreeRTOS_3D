@@ -1,0 +1,8 @@
+../Core/Src/shell.c:12:12:sh_useless_fonction	1
+../Core/Src/shell.c:27:12:sh_help	2
+../Core/Src/shell.c:38:6:shell_init	1
+../Core/Src/shell.c:56:5:shell_add	2
+../Core/Src/shell.c:68:12:shell_exec	6
+../Core/Src/shell.c:102:5:shell_run	6
+../Core/Src/shell.c:149:9:drv_uart1_receive	1
+../Core/Src/shell.c:156:9:drv_uart1_transmit	1
