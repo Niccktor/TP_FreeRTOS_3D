@@ -3,13 +3,13 @@ SEHTEL Azzedine
 
 BEGUIN Thomas
 ## Premiers pas
-	Le fichier main.c se trouve dans : <project_dir>/core/src/main.c.
+Le fichier main.c se trouve dans : <project_dir>/core/src/main.c.
 
-	Les sections délimitées par les commentaires /* USER CODE BEGIN */ et /* USER CODE END */ sont les seules zones modifiables.
-	Attention : tout code écrit en dehors de ces blocs sera écrasé si CubeIDE régénère le projet.
+Les sections délimitées par les commentaires /* USER CODE BEGIN */ et /* USER CODE END */ sont les seules zones modifiables.
+Attention : tout code écrit en dehors de ces blocs sera écrasé si CubeIDE régénère le projet.
 ## HAL_DELAY	
 	void HAL_Delay	(uint32_t Delay)
-  	Parameters:
+	Parameters:
 	Delay specifies the delay time length, in milliseconds.
 
 ## HAL_GPIO_TogglePin
@@ -31,14 +31,14 @@ Trop grande et nous gaspillons de la RAM
 
 Les autres paramètre imortant pour FreeRTOS sont:
 
-	configMAX_PRIORITIES, Nombre maximal de niveaux de priorité des tâches.
- 	configMINIMAL_STACK_SIZE, Taille par défaut de la pile pour une tâche simple.
-  	configTICK_RATE_HZ, réquence du tick système (1000 Hz pour 1ms)
+configMAX_PRIORITIES, Nombre maximal de niveaux de priorité des tâches.
+configMINIMAL_STACK_SIZE, Taille par défaut de la pile pour une tâche simple.
+configTICK_RATE_HZ, réquence du tick système (1000 Hz pour 1ms)
 
 La Macro portTICK_PERIOD_MS présente la durée d’un tick système en millisecondes.
 
-	Si configTICK_RATE_HZ = 1000; et portTICK_PERIOD_MS = 1;
- 	Pour attendre 500ms,
+Si configTICK_RATE_HZ = 1000; et portTICK_PERIOD_MS = 1;
+Pour attendre 500ms,
 	vTaskDelay(500 / portTICK_PERIOD_MS); //soit vtaskDelay(500);
 
 Explication changement de priorités
@@ -50,17 +50,17 @@ Explication changement de priorités
 	résultat : ordre constant dans les messages, stable, sans blocage.
 Priorité de TaskGive < TaskTake :
 	
-	TaskTake tourne en continu (surtout en attente du sémaphore).
-	Si TaskGive est prête pendant que TaskTake tourne, elle peut être retardée par l’ordonnanceur.
-	Résultat : l’affichage montre que TaskGive a du mal à donner le sémaphore à temps → TaskTake échoue après 1 seconde, et déclenche le reset logiciel.
+TaskTake tourne en continu (surtout en attente du sémaphore).
+Si TaskGive est prête pendant que TaskTake tourne, elle peut être retardée par l’ordonnanceur.
+Résultat : l’affichage montre que TaskGive a du mal à donner le sémaphore à temps → TaskTake échoue après 1 seconde, et déclenche le reset logiciel.
 
 ## Shell
 
 ## Debug, gestion d’erreur et statistiques
 
- 	Toute allocation dynamique malloc, xtaskCreate utilise la HEAP 
-  	FreeRTOS a sont propre gestionnaire de HEAP via l'utilisation de xTaskCreate, xQueueCreate...
-	Nous avons donc créer une tache bidon qui essaie d'allouer un tableau d'entier de plus en plus grand
+ Toute allocation dynamique malloc, xtaskCreate utilise la HEAP 
+  FreeRTOS a sont propre gestionnaire de HEAP via l'utilisation de xTaskCreate, xQueueCreate...
+Nous avons donc créer une tache bidon qui essaie d'allouer un tableau d'entier de plus en plus grand
  	
   	void ErrorTask(void *arg){
 	static int size = 2;
@@ -80,10 +80,10 @@ Priorité de TaskGive < TaskTake :
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
-	Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x1000);	
- 	Avec TOTAL_HEAP_SIZE = 15360
-  		Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x4000);
-    	Avec TOTAL_HEAP_SIZE = 61440
+Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x1000);	
+Avec TOTAL_HEAP_SIZE = 15360
+Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x4000);
+Avec TOTAL_HEAP_SIZE = 61440
 ## Attention, ne pas utiliser malloc et free, utiliser pvPortMalloc et vPortFree
 
 Nous pouvons observer que l'utilisation de la mémoire dans le builder analyser ne change car nous utilison des allocation dynamique.
@@ -114,7 +114,27 @@ Afin de visualiser le fonctionnement, nous pouvons rajouter un point d'arret sur
 Il esxiste pleins d'autres fonction de hook:
 https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/12-Hook-functions
 
- 
+## Affichage des statistiques dans le shell
+ajout d'une fonction dans notre shell
+	
+	int sh_stats(h_shell_t * h_shell, int argc, char **argv) 
+ 	{
+		char buffer[512];
+  		printf("=== Liste des taches ===\r\n");
+		vTaskList(buffer);
+		printf("%s\r\n", buffer);
+
+		printf("=== Statistiques d'execution ===\r\n");
+		vTaskGetRunTimeStats(buffer);
+		printf("%s\r\n", buffer);
+
+		return 0;
+  	}
+Ajout dans notre SHell
+
+	shell_add(h_shell, 'p', sh_stats, "Affiche les statistiques");
+ Attention !! Dans xTaskCreate de notre shellTask, il nous faut augmenter la taille de la stack, car nous avons un char buff[512] dans notre focntion sh_stats
+Il faut également faire attention car vTaskList et vTaskGetRunTimeStats essaie d'écrire dans le buffer (si le buffer est trop petit alors il y aura un overflow)
  
 
 
