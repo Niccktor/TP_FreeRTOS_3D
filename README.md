@@ -81,10 +81,10 @@ Priorité de TaskGive < TaskTake :
     }
 
 	Notre code n'arrive pas a allouer plus de malloc(sizeof(int) * 81920)
- 	Notre TOTAL_HEAP_SIZE = 131072 
+ 	Notre TOTAL_HEAP_SIZE = 15360 
   	
 
-
+65536 
  
   
  
