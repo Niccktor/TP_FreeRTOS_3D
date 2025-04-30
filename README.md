@@ -80,8 +80,11 @@ Priorité de TaskGive < TaskTake :
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
-	Notre code n'arrive pas a allouer plus de malloc(sizeof(int) * 81920)
- 	Notre TOTAL_HEAP_SIZE = 15360 
+	Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x1000);	
+ 	Avec TOTAL_HEAP_SIZE = 15360
+  		Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x4000);
+    	Avec TOTAL_HEAP_SIZE = 61440
+## Attention, ne pas utiliser malloc et free, utiliser pvPortMalloc et vPortFree
   	
 
 65536 
