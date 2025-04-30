@@ -85,10 +85,9 @@ Priorité de TaskGive < TaskTake :
   		Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(sizeof(int)0x4000);
     	Avec TOTAL_HEAP_SIZE = 61440
 ## Attention, ne pas utiliser malloc et free, utiliser pvPortMalloc et vPortFree
-  	
 
-65536 
- 
+Nous pouvons observer que l'utilisation de la mémoire dans le builder analyser ne change car nous utilison des allocation dynamique.
+ 	 
   
  
 
