@@ -178,6 +178,23 @@ void ErrorTask(void *arg)
     }
 }
 
+void vOverflowTask(void *param)
+{
+    volatile uint8_t  buff[ configMINIMAL_STACK_SIZE / 4 ];
+
+    for( ;; )
+    {
+        memset((void*)buff, 0xAA, sizeof(buff));
+        vOverflowTask( NULL );
+    }
+}
+
+void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+{
+    printf("STACK OVERFLOW detected in task: %s\r\n", pcTaskName);
+    Error_Handler();
+}
+
 
 /* USER CODE END 0 */
 
@@ -233,6 +250,10 @@ int main(void)
 		printf("Failed to create xTaskCreate ErrorTask\r\n");
 		Error_Handler();
 	}
+    if (xTaskCreate( vOverflowTask, "overFlowTask", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY,  NULL) != pdPASS){
+		printf("Failed to create xTaskCreate overFlowTask\r\n");
+		Error_Handler();
+    }
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
