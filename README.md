@@ -56,6 +56,34 @@ Priorité de TaskGive < TaskTake :
 
 ## Shell
 
+## Debug, gestion d’erreur et statistiques
+
+ 	Toute allocation dynamique malloc, xtaskCreate utilise la HEAP 
+  	FreeRTOS a sont propre gestionnaire de HEAP via l'utilisation de xTaskCreate, xQueueCreate...
+	Nous avons donc créer une tache bidon qui essaie d'allouer un tableau d'entier de plus en plus grand
+ 	
+  	void ErrorTask(void *arg){
+	static int size = 10;
+	int *buffer = NULL;
+
+    for(;;) {
+    	printf("ErrorTask Malloc buffer size %d 0x%X\r\n", size, size);
+    	buffer = (int *)malloc(sizeof(int) * size);
+    	if (buffer == NULL)
+    		printf("ErroTask: Malloc erreur %d 0x%X\t\n", size, size);
+    	else
+    	{
+    		size *= 2;
+    		free(buffer);
+    		buffer = NULL;
+    	}
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
+	Notre code n'arrive pas a allouer plus de malloc(sizeof(int) * 81920)
+ 	Notre TOTAL_HEAP_SIZE = 15360
+  	
+
 
  
   
