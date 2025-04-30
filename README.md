@@ -63,7 +63,7 @@ Priorité de TaskGive < TaskTake :
 	Nous avons donc créer une tache bidon qui essaie d'allouer un tableau d'entier de plus en plus grand
  	
   	void ErrorTask(void *arg){
-	static int size = 10;
+	static int size = 2;
 	int *buffer = NULL;
 
     for(;;) {
@@ -81,7 +81,7 @@ Priorité de TaskGive < TaskTake :
     }
 
 	Notre code n'arrive pas a allouer plus de malloc(sizeof(int) * 81920)
- 	Notre TOTAL_HEAP_SIZE = 15360
+ 	Notre TOTAL_HEAP_SIZE = 131072 
   	
 
 
