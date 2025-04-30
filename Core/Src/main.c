@@ -156,19 +156,23 @@ void ShellTask(void *argument)
 
 void ErrorTask(void *arg)
 {
-	static int size = 10;
+	static int size = 2;
 	int *buffer = NULL;
 
     for(;;) {
     	printf("ErrorTask Malloc buffer size %d 0x%X\r\n", size, size);
-    	buffer = (int *)malloc(sizeof(int) * size);
+    	buffer = (int *)pvPortMalloc(sizeof(int) * size);
     	if (buffer == NULL)
+    	{
     		printf("ErroTask: Malloc erreur %d 0x%X\t\n", size, size);
+    		break ;
+    	}
     	else
     	{
     		size *= 2;
-    		free(buffer);
+    		vPortFree(buffer);
     		buffer = NULL;
+
     	}
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

@@ -6,6 +6,6 @@
 ../Core/Src/main.c:134:6:TaskTake	1
 ../Core/Src/main.c:148:6:ShellTask	1
 ../Core/Src/main.c:157:6:ErrorTask	2
-../Core/Src/main.c:184:5:main	5
-../Core/Src/main.c:257:6:SystemClock_Config	4
-../Core/Src/main.c:314:6:Error_Handler	1
+../Core/Src/main.c:188:5:main	5
+../Core/Src/main.c:261:6:SystemClock_Config	4
+../Core/Src/main.c:318:6:Error_Handler	1
