@@ -88,7 +88,33 @@ Priorité de TaskGive < TaskTake :
 
 Nous pouvons observer que l'utilisation de la mémoire dans le builder analyser ne change car nous utilison des allocation dynamique.
  	 
-  
+## Gestion des piles
+
+Pour tester l'overflow de la pile, nous avons créer une tache recursive
+	
+ 	void vOverflowTask(void *param)
+	{
+    	volatile uint8_t  buff[ configMINIMAL_STACK_SIZE / 4 ];
+
+    	for( ;; )
+    	{
+        	memset((void*)buff, 0xAA, sizeof(buff));
+        	vOverflowTask( NULL );
+    	}
+	}
+Et nous avons également réecrit notre vApplicationStackOverflowHook
+	
+ 	void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+	{
+    	printf("STACK OVERFLOW detected in task: %s\r\n", pcTaskName);
+    	Error_Handler();
+	}
+Afin de visualiser le fonctionnement, nous pouvons rajouter un point d'arret sur vApplicationStackOverflowHook et utiliser le debuger
+
+Il esxiste pleins d'autres fonction de hook:
+https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/12-Hook-functions
+
+ 
  
 
 
