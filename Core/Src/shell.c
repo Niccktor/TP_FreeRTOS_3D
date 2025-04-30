@@ -35,6 +35,8 @@ static int sh_help(h_shell_t * h_shell, int argc, char ** argv) {
 	return 0;
 }
 
+
+
 void shell_init(h_shell_t * h_shell) {
 	int size = 0;
 	h_shell->drv.receive = drv_uart1_receive;
@@ -50,6 +52,7 @@ void shell_init(h_shell_t * h_shell) {
 
 	shell_add(h_shell, 'h', sh_help, "Help");
 	shell_add(h_shell, 'f', sh_useless_fonction, "Une fonction inutile");
+	shell_add(h_shell, 'p', sh_stats, "Affiche les statistiques");
 	shell_add(h_shell, 'l', sh_led, "Enable/Disable LedTask and first param set the led Delay");
 }
 

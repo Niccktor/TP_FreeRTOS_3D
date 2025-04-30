@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -27,6 +28,7 @@
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,33 +82,6 @@ int __io_putchar(int ch)
 
 uint32_t led_delay_ms = 100;
 
-int sh_led(h_shell_t *h_shell, int argc, char **argv)
-{
-	static int bool = 1;
-	int value = 0;
-
-	if (argc == 2)
-	{
-		value = atoi(argv[1]);
-		if (value >= 30)
-		{
-			led_delay_ms = value;
-			printf("Value of Led Task %d\r\n", value);
-		}
-	}
-	if (bool == 0 || (argc == 2 && value != 0))
-	{
-		vTaskResume(LedTaskHandle);
-		bool = 1;
-	}
-	else
-	{
-		vTaskSuspend(LedTaskHandle);
-		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,GPIO_PIN_RESET);
-		bool = 0;
-	}
-	return 0;
-}
 
 void StartLedTask(void *argument) {
 	uint8_t ledState = 0;
@@ -143,6 +118,48 @@ void TaskTake(void *argument) {
 			NVIC_SystemReset(); // Trigger reset
 		}
 	}
+}
+
+int sh_stats(h_shell_t * h_shell, int argc, char **argv) {
+    char buffer[512];
+
+    printf("=== Liste des taches ===\r\n");
+    vTaskList(buffer);
+    printf("%s\r\n", buffer);
+
+    printf("=== Statistiques d'execution ===\r\n");
+    vTaskGetRunTimeStats(buffer);
+    printf("%s\r\n", buffer);
+
+    return 0;
+}
+
+int sh_led(h_shell_t *h_shell, int argc, char **argv)
+{
+	static int bool = 1;
+	int value = 0;
+
+	if (argc == 2)
+	{
+		value = atoi(argv[1]);
+		if (value >= 30)
+		{
+			led_delay_ms = value;
+			printf("Value of Led Task %d\r\n", value);
+		}
+	}
+	if (bool == 0 || (argc == 2 && value != 0))
+	{
+		vTaskResume(LedTaskHandle);
+		bool = 1;
+	}
+	else
+	{
+		vTaskSuspend(LedTaskHandle);
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,GPIO_PIN_RESET);
+		bool = 0;
+	}
+	return 0;
 }
 
 void ShellTask(void *argument)
@@ -191,10 +208,17 @@ void vOverflowTask(void *param)
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 {
-    printf("STACK OVERFLOW detected in task: %s\r\n", pcTaskName);
-    Error_Handler();
+    //printf("STACK OVERFLOW detected in task: %s\r\n", pcTaskName);
+    //Error_Handler();
 }
 
+void configureTimerForRunTimeStats(void) {
+    HAL_TIM_Base_Start(&htim2);
+}
+
+unsigned long getRunTimeCounterValue(void) {
+    return __HAL_TIM_GET_COUNTER(&htim2);
+}
 
 /* USER CODE END 0 */
 
@@ -229,6 +253,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 	shell_init(&h_shell);
 	QueueTask = xQueueCreate(10, sizeof(uint32_t)); // Create the queue
@@ -242,18 +267,20 @@ int main(void)
 		printf("Failed to create xTaskCreate LedTask\r\n");
 		Error_Handler();
 	}
-	if (xTaskCreate(ShellTask, "ShellTask", 128, NULL, tskIDLE_PRIORITY + 5, &ShellTaskHandle) != pdPASS ) {
+	if (xTaskCreate(ShellTask, "ShellTask", 512, NULL, tskIDLE_PRIORITY + 5, &ShellTaskHandle) != pdPASS ) {
 		printf("Failed to create xTaskCreate ShellTask\r\n");
 		Error_Handler();
 	}
+	/*
 	if (xTaskCreate(ErrorTask, "ErrorTask", 128, NULL, tskIDLE_PRIORITY + 5, &ErrorTaskHandle) != pdPASS ) {
 		printf("Failed to create xTaskCreate ErrorTask\r\n");
 		Error_Handler();
 	}
-    if (xTaskCreate( vOverflowTask, "overFlowTask", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY,  NULL) != pdPASS){
+	*/
+    /*if (xTaskCreate( vOverflowTask, "overFlowTask", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY,  NULL) != pdPASS){
 		printf("Failed to create xTaskCreate overFlowTask\r\n");
 		Error_Handler();
-    }
+    }*/
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in cmsis_os2.c) */

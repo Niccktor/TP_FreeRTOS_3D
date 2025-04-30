@@ -49,6 +49,7 @@ typedef struct h_shell_struct
 
 
 int sh_led(h_shell_t *h_shell, int argc, char **argv);
+int sh_stats(h_shell_t * h_shell, int argc, char **argv);
 
 void shell_init(h_shell_t * h_shell);
 int shell_add(h_shell_t * h_shell, char c, shell_func_pointer_t pfunc, char * description);
