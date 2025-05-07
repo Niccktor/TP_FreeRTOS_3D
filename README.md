@@ -2,38 +2,92 @@
 SEHTEL Azzedine
 
 BEGUIN Thomas
+
 ## Premiers pas
-Le fichier main.c se trouve dans : <project_dir>/core/src/main.c.
+### Où se situe le fichier main.c ?
+Le fichier `main.c` se trouve dans le chemin suivant :  
+`\TP_Freertos_SEHTEL_BEGUIN\Core\Src\main.c`
 
-Les sections délimitées par les commentaires /* USER CODE BEGIN */ et /* USER CODE END */ sont les seules zones modifiables.
-Attention : tout code écrit en dehors de ces blocs sera écrasé si CubeIDE régénère le projet.
-## HAL_DELAY	
-	void HAL_Delay	(uint32_t Delay)
-	Parameters:
-	Delay specifies the delay time length, in milliseconds.
+### À quoi servent les commentaires indiquant BEGIN et END ?
+Les commentaires `BEGIN` et `END` délimitent les sections où l'on peut écrire du code sans que l'outil de génération de code (comme CubeMX) n'écrasent ces modifications lors d'une régénération.
 
-## HAL_GPIO_TogglePin
-	void HAL_GPIO_TogglePin	( GPIO_TypeDef *GPIOx, uint16_t	GPIO_Pin)
- 	Parameters:
-	GPIOx	Where x can be (A..K) to select the GPIO peripheral for STM32F429X device or x can be (A..I) to select the GPIO peripheral for STM32F40XX and STM32F427X devices.
-	GPIO_Pin	Specifies the pins to be toggled.
-Dans STM32CubeDIE, les entrées/sortie sont configurer dans le fichier IOC qui par la suite genere du Code.
+### Quels sont les paramètres à passer à HAL_Delay et HAL_GPIO_TogglePin ?
+- `HAL_Delay`: Le paramètre est un entier non signé `uint32_t` représentant le délai en millisecondes.
+- `HAL_GPIO_TogglePin`: Les paramètres sont :
+  - Le port GPIO.
+  - Le numéro de la broche.
 
-Les définition des GPIO peuvent etre retrouver dans le fichier <project_dir>/core/inc/main.c
+### Dans quel fichier les ports d’entrée/sorties sont-ils définis ?
+Les ports d'entrée/sortie sont définis dans le fichier `gpio.c`.
 
-Et la fonction d'initialisation des GPIO est dans le fichier <project_dir>/core/src/gpio.c
+
+##  FreeRTOS, tâches et sémaphores
+
+### Tâche simple
+#### En quoi le paramètre TOTAL_HEAP_SIZE a-t-il de l’importance ?
+Le paramètre `TOTAL_HEAP_SIZE` détermine la quantité de mémoire disponible pour les allocations dynamiques dans FreeRTOS, si la taille est insuffisante, ces objets ne peuvent pas être créés.
+
+### Sémaphores pour la synchronisation
+#### Créez deux tâches avec des priorités différentes (TaskGive et TaskTake), que font-elles ?
+- `TaskGive`: Envoie un signal (donne un sémaphore) pour indiquer qu'une ressource est disponible.
+- `TaskTake`: Attend le signal (prend le sémaphore) pour accéder à la ressource.
+
+#### Que se passe-t-il si on ajoute 100ms au délai de TaskGive à chaque itération ?
+Le délai entre chaque signal envoyé par `TaskGive` augmente progressivement, ce qui ralentit la synchronisation avec `TaskTake` , passé les 1000 ms, la fonction `NVIC_SystemReset();` est activé ce qui reset le STM32, cela agit comme un watchdog.
+
+#### Changez les priorités. Expliquez les changements dans l’affichage.
+Si `TaskGive` a une priorité plus élevée que `TaskTake`, elle sera exécutée plus fréquemment, ce qui peut entraîner un comportement plus rapide. Inversement, si `TaskTake` a une priorité plus élevée, elle peut attendre plus longtemps pour recevoir un signal.
+
+
+### Queues
+#### Modifiez TaskGive pour envoyer la valeur du timer dans une queue. Que doit faire TaskTake ?
+- `TaskGive` : Envoie la valeur du timer `delay` dans une queue nommé QueuTask avec la fonction`xQueueSend`.
+- `TaskTake` : Lit la valeur de la queue à l'aide de `xQueueReceive` et l'affiche via `printf`. Si la réception échoue (timeout), elle peut gérer l'erreur, par exemple en affichant un message ou en déclenchant un reset.
+
+#### Réentrance et exclusion mutuelle
+#### Observez attentivement la sortie dans la console. Expliquez d’où vient le problème.
+
+#### print dans le terminal ####
+||TP_FreeRTOS_SEHTEL_BEGUIN||// 
+Je suis Tache 2 et je m'endors pour 2 ticks 
+Je suis Tache 1 et je m'endors pour 2 ticks
+Je suis Tache 2 et je m'endors pour 2 ticks 
+Je suis Tache 2 et je m'endors pour 2 ticks
+Je suis Tache 1 et je m'endors pour 2 ticks 
+Je suis Tache 2 et je m'endors pour 2 ticks 
+Je suis Tache 2 et je m'endors pour 2 ticks 
+Je suis Tache 1 et je m'endors pour 2 ticks 
+
+#### Expliquez d’où vient le problème 
+Le problème vient des priorités des tâches et de la configuration des délais. Les deux tâches, `Tache 1` et `Tache 1`, ont des priorités et un délai différents.
+
+#define TASK1_PRIORITY 1
+#define TASK2_PRIORITY 2
+#define TASK1_DELAY 1
+#define TASK2_DELAY 2
+
+Les deux tâches ont des délais très proches. Cela provoque des réveils fréquents et simultanés, mais Tache 2 a une priorité plus élevée sur le processeur.
+Conclusion la Tache 2 s'exécute plus souvent que Tache 1 malgré le faite qu celle-ci ai un delay plus faible, ce qui déséquilibre l'affichage dans la console.
+
 ## FreeRTOS	
+
+### On joue avec le shell
+#### Quel est le nom de la zone réservée à l’allocation dynamique ?
+La zone reservé s'appelle la heap
+
+###Est-ce géré par FreeRTOS ou la HAL 
+Elle est géré par FreeRTOS via son propre gestionnaire de mémoire. 
+
 configTOTAL_HEAP_SIZE est important car il s'agit de la mémoire allouée pour FreeRTOS. 
 
-Si elle est trop petite, il pourra etre imossible de créer des task via xTaskCreate.
+Si elle est trop petite, il sera impossible de créer des task via xTaskCreate,
+en revanche, si elle est trop grande nous gaspillons de la RAM
 
-Trop grande et nous gaspillons de la RAM
+Les autres paramètres imortant pour FreeRTOS sont:
 
-Les autres paramètre imortant pour FreeRTOS sont:
-
-configMAX_PRIORITIES, Nombre maximal de niveaux de priorité des tâches.
-configMINIMAL_STACK_SIZE, Taille par défaut de la pile pour une tâche simple.
-configTICK_RATE_HZ, réquence du tick système (1000 Hz pour 1ms)
+	- configMAX_PRIORITIES, Nombre maximal de niveaux de priorité des tâches.
+	- configMINIMAL_STACK_SIZE, Taille par défaut de la pile pour une tâche simple.
+	- configTICK_RATE_HZ, réquence du tick système (1000 Hz pour 1ms)
 
 La Macro portTICK_PERIOD_MS présente la durée d’un tick système en millisecondes.
 
@@ -86,7 +140,7 @@ Notre allocation dynamique nous retourne une erreur quand nous envoyons malloc(s
 Avec TOTAL_HEAP_SIZE = 61440
 ## Attention, ne pas utiliser malloc et free, utiliser pvPortMalloc et vPortFree
 
-Nous pouvons observer que l'utilisation de la mémoire dans le builder analyser ne change car nous utilison des allocation dynamique.
+Nous pouvons observer que l'utilisation de la mémoire dans le builder analyser ne change car nous utilison des allocations dynamiques.
  	 
 ## Gestion des piles
 
@@ -135,6 +189,8 @@ Ajout dans notre SHell
 	shell_add(h_shell, 'p', sh_stats, "Affiche les statistiques");
  Attention !! Dans xTaskCreate de notre shellTask, il nous faut augmenter la taille de la stack, car nous avons un char buff[512] dans notre focntion sh_stats
 Il faut également faire attention car vTaskList et vTaskGetRunTimeStats essaie d'écrire dans le buffer (si le buffer est trop petit alors il y aura un overflow)
+
+
  
 
 
